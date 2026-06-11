@@ -1,0 +1,19 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+    margin: 20px;
+    background-color: #1a1a1a; /* Fond noir/gris foncé */
+    color: #f0f0f0; /* Texte clair */
+}
+
+#track-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    border: 1px solid #444; /* Bordure grise foncée */
+    margin: 0 auto;
+}
+
+#track-canvas {
+    background-color: #000000; /* Fond du canvas noir pur */
+}

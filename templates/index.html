@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>F1delity - Simulation de piste F1</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Simulation de piste F1</h1>
+
+    <div id="controls">
+        <label>Vitesse de lecture : </label>
+        <button onclick="setSpeed(1)">x1 (Temps réel)</button>
+        <button onclick="setSpeed(5)">x5</button>
+        <button onclick="setSpeed(10)">x10</button>
+        <button onclick="setSpeed(50)">x50</button>
+        <button onclick="setSpeed(100)">x100</button>
+    </div>
+
+    <div id="track-container">
+        <canvas id="track-canvas" width="800" height="600"></canvas>
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
