@@ -1,19 +1,129 @@
+/* Réinitialisation de base et style du body */
 body {
-    font-family: sans-serif;
-    text-align: center;
-    margin: 20px;
-    background-color: #1a1a1a; /* Fond noir/gris foncé */
-    color: #f0f0f0; /* Texte clair */
+    font-family: Arial, sans-serif;
+    background-color: #000000;
+    color: #f0f0f0;
+    margin: 0;
+    height: 100vh; /* Le body prend 100% de la hauteur de la vue */
+    overflow: hidden; /* Empêche le scroll */
 }
 
+/* Conteneur principal qui organise tout */
+#main-layout {
+    display: flex;
+    height: 100%;
+}
+
+/* Colonne de gauche (Sidebar) */
+#sidebar {
+    width: 20%;
+    background-color: #222222;
+    padding: 20px;
+    box-sizing: border-box; /* Le padding ne s'ajoute pas à la largeur */
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid #E10600;
+}
+
+#app-title {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #E10600;
+    padding: 10px;
+}
+
+#signature {
+    text-align: center;
+    font-size: 0.8em;
+    color: #888;
+    margin-top: -10px;
+    margin-bottom: 40px;
+}
+
+#controls .control-group {
+    margin-bottom: 20px;
+}
+
+#controls .control-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+#controls button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#controls button:hover {
+    background-color: white;
+    color: #000000;
+}
+
+/* Style spécifique pour le bouton Play/Pause */
+#playPauseBtn.playing {
+    background-color: #c00;
+    color: white;
+}
+#playPauseBtn.paused {
+    background-color: #080;
+    color: white;
+}
+
+/* Style pour le bouton de vitesse actif */
+#controls button.active {
+    background-color: white;
+    color: #000000;
+    border-color: white;
+}
+
+
+/* Colonne de droite (Contenu principal) */
+#main-content {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#track-header {
+    text-align: center;
+    padding-bottom: 15px;
+}
+
+#track-header h2 {
+    margin: 0;
+    font-size: 2em;
+}
+
+#track-header p {
+    margin: 5px 0 0 0;
+    color: white;
+}
+
+/* Conteneur du circuit pour le centrage */
 #track-container {
-    position: relative;
-    width: 800px;
-    height: 600px;
-    border: 1px solid #444; /* Bordure grise foncée */
-    margin: 0 auto;
+    flex-grow: 1; /* Prend tout l'espace vertical restant */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%; /* Important pour que le canvas puisse se baser dessus */
+    background-color: #000000;
 }
 
 #track-canvas {
-    background-color: #000000; /* Fond du canvas noir pur */
+    /* Le canvas n'a plus besoin de taille fixe, il s'adapte à son conteneur */
+    max-width: 100%;
+    max-height: 100%;
+    background-color: #000000;
 }

@@ -1,31 +1,76 @@
 const canvas = document.getElementById('track-canvas');
 const ctx = canvas.getContext('2d');
-const width = canvas.width;
-const height = canvas.height;
 
 // -- Variables de Simulation --
 let allCarsData = {};
 let allDrivers = [];
+let currentSessionDetails = null;
 let animationFrameId;
 let firstDataTimestamp = 0;
 let lastDataTimestamp = 0;
-let timeMultiplier = 10; // Vitesse par défaut
+let timeMultiplier = 10;
 let currentSimulatedTime = 0; 
 let lastFrameTime = 0;
+let isPaused = false;
 
 // -- Variables de Rendu --
 let scale = 1;
 let xOffset = 0;
 let yOffset = 0;
-const driverColors = ['#DC0000', '#F91536', '#00D2BE', '#0090FF', '#3671C6', '#2293D1', '#F58020', '#5E8FAA', '#B6BABD', '#37BEDD', '#358C75', '#52E252', '#E6002B', '#9B0000', '#006F62', '#040000', '#6CD3BF', '#FF8700', '#C00000', '#005AFF'];
 
-// Fonction appelée par les boutons HTML pour changer la vitesse
+// --- SOLUTION DE CONTOURNEMENT POUR LES COULEURS ---
+// On code en dur les couleurs des équipes de la saison 2023
+const teamColors = new Map([
+    ['Red Bull Racing', '#060024'],
+    ['Ferrari', '#DC0000'],
+    ['Mercedes', '#00D2BE'],
+    ['Alpine', '#0090FF'],
+    ['McLaren', '#FF8700'],
+    ['Alfa Romeo', '#900000'],
+    ['Aston Martin', '#006F62'],
+    ['Haas F1 Team', '#FFFFFF'],
+    ['AlphaTauri', '#2B4562'],
+    ['Williams', '#005AFF']
+]);
+
+// --- Fonctions de contrôle ---
 function setSpeed(speed) {
     timeMultiplier = speed;
+    updateSpeedButtonsUI();
 }
 
+function togglePlayPause() {
+    isPaused = !isPaused;
+    const btn = document.getElementById('playPauseBtn');
+    if (isPaused) {
+        btn.textContent = 'Play';
+        btn.className = 'paused';
+        cancelAnimationFrame(animationFrameId);
+    } else {
+        btn.textContent = 'Pause';
+        btn.className = 'playing';
+        lastFrameTime = 0;
+        animationFrameId = requestAnimationFrame(animate);
+    }
+}
+
+function updateSpeedButtonsUI() {
+    const buttons = document.querySelectorAll('#controls .control-group:nth-of-type(2) button');
+    buttons.forEach(button => {
+        button.classList.remove('active');
+        if (parseInt(button.textContent.replace('x', '')) === timeMultiplier) {
+            button.classList.add('active');
+        }
+    });
+}
+
+// --- Fonctions de Rendu ---
 function setupScaling(locationData) {
     if (!locationData || locationData.length === 0) return;
+
+    const container = document.getElementById('track-container');
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
 
     const minX = Math.min(...locationData.map(p => p.x));
     const maxX = Math.max(...locationData.map(p => p.x));
@@ -36,23 +81,23 @@ function setupScaling(locationData) {
     const dataWidth = maxX - minX;
     const dataHeight = maxY - minY;
 
-    scale = Math.min((width - 2 * padding) / dataWidth, (height - 2 * padding) / dataHeight);
-    xOffset = (width - dataWidth * scale) / 2 - minX * scale;
-    yOffset = (height - dataHeight * scale) / 2 - minY * scale;
+    scale = Math.min((canvas.width - 2 * padding) / dataWidth, (canvas.height - 2 * padding) / dataHeight);
+    xOffset = (canvas.width - dataWidth * scale) / 2 - minX * scale;
+    yOffset = (canvas.height - dataHeight * scale) / 2 - minY * scale;
 }
 
 function drawTrackOutline(locationData) {
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (locationData.length === 0) return;
 
     ctx.strokeStyle = 'white';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.beginPath();
 
     for (let i = 0; i < locationData.length; i++) {
         const p = locationData[i];
         const canvasX = p.x * scale + xOffset;
-        const canvasY = height - (p.y * scale + yOffset);
+        const canvasY = canvas.height - (p.y * scale + yOffset);
 
         if (i === 0) {
             ctx.moveTo(canvasX, canvasY);
@@ -64,6 +109,8 @@ function drawTrackOutline(locationData) {
 }
 
 function animate(timestamp) {
+    if (isPaused) return;
+
     if (!lastFrameTime) lastFrameTime = timestamp;
     
     const deltaTime = timestamp - lastFrameTime;
@@ -73,9 +120,9 @@ function animate(timestamp) {
     
     const targetDataTimestamp = firstDataTimestamp + currentSimulatedTime;
 
-    drawTrackOutline(Object.values(allCarsData)[0] || []);
+    drawTrackOutline(Object.values(allCarsData).find(data => data.length > 0) || []);
 
-    allDrivers.forEach((driver, index) => {
+    allDrivers.forEach(driver => {
         const driverData = allCarsData[driver.driver_number];
         if (!driverData) return;
 
@@ -85,16 +132,19 @@ function animate(timestamp) {
         const point = driverData[currentIndex];
         if (point) {
             const canvasX = point.x * scale + xOffset;
-            const canvasY = height - (point.y * scale + yOffset);
+            const canvasY = canvas.height - (point.y * scale + yOffset);
 
-            ctx.fillStyle = driverColors[index % driverColors.length];
+            // Utilise la couleur de l'équipe via notre Map
+            ctx.fillStyle = teamColors.get(driver.team_name) || 'grey';
             ctx.beginPath();
-            ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI);
+            ctx.arc(canvasX, canvasY, 12, 0, 2 * Math.PI);
             ctx.fill();
 
             ctx.fillStyle = 'black';
-            ctx.font = 'bold 10px Arial';
-            ctx.fillText(point.driver_number, canvasX - 4, canvasY + 3);
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(point.driver_number, canvasX, canvasY);
         }
     });
 
@@ -108,7 +158,7 @@ function startSimulation() {
         cancelAnimationFrame(animationFrameId);
     }
     
-    const trackData = Object.values(allCarsData)[0] || [];
+    const trackData = Object.values(allCarsData).find(data => data.length > 0) || [];
     if (trackData.length === 0) return;
 
     setupScaling(trackData);
@@ -133,7 +183,19 @@ function startSimulation() {
     currentSimulatedTime = 0;
     lastFrameTime = 0; 
     
+    document.getElementById('playPauseBtn').textContent = 'Pause';
+    document.getElementById('playPauseBtn').className = 'playing';
+    isPaused = false;
+    updateSpeedButtonsUI();
+
     animationFrameId = requestAnimationFrame(animate);
+}
+
+// --- Fonctions de récupération de données ---
+async function getSessions() {
+    const response = await fetch(`/api/sessions`);
+    if (!response.ok) throw new Error(`Erreur HTTP ! statut: ${response.status}`);
+    return await response.json();
 }
 
 async function getDrivers(session_key) {
@@ -154,24 +216,38 @@ function sleep(ms) {
 
 async function main() {
     const sessionKey = "9161";
+    const circuitNameElement = document.getElementById('circuit-name');
+    const sessionNameElement = document.getElementById('session-name');
 
-    ctx.font = '20px Arial';
-    ctx.fillStyle = 'white';
-    ctx.fillText("Récupération de la liste des pilotes...", 250, 300);
+    circuitNameElement.textContent = "Chargement...";
+    sessionNameElement.textContent = "Récupération des détails de la session...";
 
     try {
+        const allSessions = await getSessions();
+        currentSessionDetails = allSessions.find(s => s.session_key == sessionKey);
+
+        if (!currentSessionDetails) {
+            circuitNameElement.textContent = "Erreur";
+            sessionNameElement.textContent = "Session non trouvée.";
+            return;
+        }
+
+        circuitNameElement.textContent = currentSessionDetails.circuit_short_name;
+        sessionNameElement.textContent = `${currentSessionDetails.year} - ${currentSessionDetails.session_name}`;
+
+        // On ne récupère plus les équipes, on utilise notre Map
+        sessionNameElement.textContent = `Récupération de la liste des pilotes...`;
         allDrivers = await getDrivers(sessionKey);
+
         if (!allDrivers || allDrivers.length === 0) {
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillText("Impossible de récupérer les pilotes.", 250, 300);
+            sessionNameElement.textContent = "Impossible de récupérer les pilotes.";
             return;
         }
 
         for (let i = 0; i < allDrivers.length; i++) {
             const driver = allDrivers[i];
             
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillText(`Chargement des pilotes (${i + 1}/${allDrivers.length}) : ${driver.full_name}...`, 250, 300);
+            sessionNameElement.textContent = `Chargement des pilotes (${i + 1}/${allDrivers.length}) : ${driver.full_name}...`;
 
             const locationData = await getLocationForDriver(sessionKey, driver.driver_number);
             
@@ -183,12 +259,14 @@ async function main() {
 
             await sleep(400);
         }
+        
+        sessionNameElement.textContent = `${currentSessionDetails.year} - ${currentSessionDetails.session_name}`;
 
         startSimulation();
     } catch (error) {
         console.error("Une erreur est survenue lors du chargement :", error);
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillText("Une erreur est survenue. Vérifiez la console.", 250, 300);
+        circuitNameElement.textContent = "Une erreur est survenue.";
+        sessionNameElement.textContent = "Vérifiez la console pour plus de détails.";
     }
 }
 

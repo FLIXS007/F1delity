@@ -17,23 +17,45 @@ def get_sessions():
         response.raise_for_status()
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de la récupération des sessions : {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/drivers/<session_key>')
 def get_drivers(session_key):
-    # Point de terminaison pour obtenir la liste des pilotes d'une session
     try:
         api_url = f"{OPENF1_API_URL}/drivers?session_key={session_key}"
         response = requests.get(api_url, timeout=30)
         response.raise_for_status()
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de la récupération des pilotes : {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/teams')
+def get_teams():
+    try:
+        meeting_key = request.args.get('meeting_key')
+        if not meeting_key:
+            return jsonify({"error": "Paramètre 'meeting_key' manquant"}), 400
+            
+        api_url = f"{OPENF1_API_URL}/teams?meeting_key={meeting_key}"
+        print(f"Appel API Teams : {api_url}")
+        response = requests.get(api_url, timeout=30)
+        
+        # --- CORRECTION ICI : Gérer le 404 spécifiquement ---
+        if response.status_code == 404:
+            print(f"L'API OpenF1 a renvoyé 404 pour les équipes du meeting {meeting_key}. Retourne une liste vide.")
+            return jsonify([]) # Retourne une liste vide si 404
+        
+        response.raise_for_status() # Lève une exception pour les autres erreurs (4xx, 5xx)
+        return jsonify(response.json())
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de l'appel à l'API OpenF1 pour les équipes : {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/location/<session_key>')
 def get_location(session_key):
     try:
-        # On récupère le driver_number s'il est passé en paramètre (ex: /api/location/9161?driver_number=1)
         driver_number = request.args.get('driver_number')
         
         api_url = f"{OPENF1_API_URL}/location?session_key={session_key}"
@@ -44,6 +66,7 @@ def get_location(session_key):
         response.raise_for_status()
         return jsonify(response.json())
     except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de l'appel à l'API OpenF1 pour la localisation : {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

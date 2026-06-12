@@ -6,19 +6,39 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Simulation de piste F1</h1>
+    <div id="main-layout">
+        <!-- Colonne de gauche : Panneau de contrôle (20%) -->
+        <div id="sidebar">
+            <h1 id="app-title">F1delity</h1>
+            <p id="signature">made by FLIXS007</p>
 
-    <div id="controls">
-        <label>Vitesse de lecture : </label>
-        <button onclick="setSpeed(1)">x1 (Temps réel)</button>
-        <button onclick="setSpeed(5)">x5</button>
-        <button onclick="setSpeed(10)">x10</button>
-        <button onclick="setSpeed(50)">x50</button>
-        <button onclick="setSpeed(100)">x100</button>
-    </div>
+            <div id="controls">
+                <div class="control-group">
+                    <label>Contrôle de la lecture</label>
+                    <button id="playPauseBtn" onclick="togglePlayPause()">Pause</button>
+                </div>
 
-    <div id="track-container">
-        <canvas id="track-canvas" width="800" height="600"></canvas>
+                <div class="control-group">
+                    <label>Vitesse de lecture</label>
+                    <button onclick="setSpeed(1)">x1</button>
+                    <button onclick="setSpeed(5)">x5</button>
+                    <button onclick="setSpeed(10)">x10</button>
+                    <button onclick="setSpeed(50)">x50</button>
+                    <button onclick="setSpeed(100)">x100</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne de droite : Contenu principal (80%) -->
+        <div id="main-content">
+            <div id="track-header">
+                <h2 id="circuit-name">Chargement...</h2>
+                <p id="session-name"></p>
+            </div>
+            <div id="track-container">
+                <canvas id="track-canvas"></canvas>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='main.js') }}"></script>
